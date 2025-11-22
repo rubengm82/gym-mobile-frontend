@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "gym-mobile-front",
-    "slug": "gym-mobile-front",
+    "name": "gym-mobile-frontend",
+    "slug": "gym-mobile-frontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,6 +25,10 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
-    }
+    },
+    "plugins": [
+      "expo-barcode-scanner",
+      "expo-router"
+    ]
   }
 }

@@ -1,0 +1,11 @@
+-Inicia el Server
+   npx expo start --web
+   o
+   npx expo
+ 
+ -Instala de nuevo la carpeta y limpia caches de .expo
+   npx expo start --web --clear
+ 
+ -Instala los node_modules
+   npm install
+
