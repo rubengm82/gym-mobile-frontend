@@ -1,7 +1,7 @@
 {
   "name": "gym-mobile-frontend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
+    "axios": "^1.13.2",
     "expo": "^54.0.0",
     "expo-barcode-scanner": "^13.0.1",
     "expo-camera": "~17.0.9",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@types/react": "~19.1.10",
     "eslint": "^9.25.1",
     "eslint-config-expo": "~10.0.0",
     "prettier": "^3.2.5",
