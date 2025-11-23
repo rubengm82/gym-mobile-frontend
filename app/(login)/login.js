@@ -10,9 +10,14 @@ export default function Login() {
       className="flex-1 justify-center bg-gray-800 p-5"
       style={{ padding: 20 }} // opcional, si quieres padding extra
     >
-      <TextInput placeholder="Usuario" className="mb-4 w-full border border-gray-500 p-2" />
+      <TextInput
+        placeholder="Usuario"
+        placeholderTextColor="#ffffff"
+        className="mb-4 w-full border border-gray-500 p-2"
+      />
       <TextInput
         placeholder="Clave"
+        placeholderTextColor="#ffffff"
         secureTextEntry
         className="mb-4 w-full border border-gray-500 p-2"
       />
