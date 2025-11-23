@@ -14,56 +14,39 @@ export default function Login() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: '#1f2937' }}
+      className="flex-1 bg-gray-800"
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 20,
-        }}
-        keyboardShouldPersistTaps="handled">
-        {/* Imagen del logo */}
+        keyboardShouldPersistTaps="handled"
+        className="flex-1"
+        contentContainerClassName="flex-grow justify-center items-center p-5">
+        {/* Logo */}
         <Image
           source={require('../../assets/images/logoTransApp.png')}
-          style={{ width: 200, height: 52, marginBottom: 20 }}
+          style={{ width: 250, height: 65 }}
+          className="mb-5"
           resizeMode="stretch"
         />
 
-        {/* Inputs */}
+        {/* Input Email */}
         <TextInput
           placeholder="Email"
           placeholderTextColor="#777777"
           keyboardType="email-address"
           autoCapitalize="none"
-          style={{
-            width: '100%',
-            borderWidth: 1,
-            borderColor: '#6B7280',
-            padding: 10,
-            marginBottom: 16,
-            color: '#ffffff',
-            borderRadius: 10,
-          }}
+          className="mb-4 w-full rounded-xl border border-gray-500 p-3 text-white"
         />
+
+        {/* Input Clave */}
         <TextInput
           placeholder="Clave"
           placeholderTextColor="#777777"
           secureTextEntry
-          style={{
-            width: '100%',
-            borderWidth: 1,
-            borderColor: '#6B7280',
-            padding: 10,
-            marginBottom: 16,
-            color: '#ffffff',
-            borderRadius: 10,
-          }}
+          className="mb-4 w-full rounded-xl border border-gray-500 p-3 text-white"
         />
 
         {/* Botón */}
-        <View style={{ width: '100%', marginTop: 20 }}>
+        <View className="mt-5 w-full">
           <Button title="Entrar" onPress={() => router.replace('/main')} color="#9F6D10" />
         </View>
       </ScrollView>
