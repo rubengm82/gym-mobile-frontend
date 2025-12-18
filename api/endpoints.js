@@ -10,3 +10,25 @@ export const getClientes = async () => {
     throw err;
   }
 };
+
+// Login
+export const login = async (mail, password) => {
+  try {
+    const res = await api.post('/login', { mail, password });
+    return res.data;
+  } catch (err) {
+    console.error('Error al iniciar sesión:', err);
+    throw err;
+  }
+};
+
+// Logout
+export const logout = async () => {
+  try {
+    const res = await api.post('/logout');
+    return res.data;
+  } catch (err) {
+    console.error('Error al cerrar sesión:', err);
+    throw err;
+  }
+};
