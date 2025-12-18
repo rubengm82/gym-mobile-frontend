@@ -27,8 +27,12 @@ export default function Login() {
 
   const handleLogin = async () => {
     setErrorMessage('');
-    if (mail.trim() === '' || password.trim() === '') {
-      setErrorMessage('Los campos no pueden estar vacíos');
+    if (mail.trim() === '') {
+      setErrorMessage('El campo email no puede estar vacío');
+      return;
+    }
+    if (password.trim() === '') {
+      setErrorMessage('El campo contraseña no puede estar vacío');
       return;
     }
     if (!isValidEmail(mail)) {
