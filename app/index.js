@@ -1,8 +1,29 @@
-import { Redirect } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../api/api_service';
 
-//  Hace redirect a la route de login de la App,
-//   que será la route de inicio y esta si se logea pasara a
-//   /main o seguirá deslogeado en /login
 export default function Index() {
-  return <Redirect href="/login" />;
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = await AsyncStorage.getItem('authToken');
+        if (token) {
+          api.setAuthToken(token);
+          router.replace('/main');
+        } else {
+          router.replace('/login');
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        router.replace('/login');
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
+  return null;
 }
