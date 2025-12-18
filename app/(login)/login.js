@@ -6,11 +6,28 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
+import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { login } from '../../api/endpoints';
+import api from '../../api/api_service';
 
 export default function Login() {
   const router = useRouter();
+  const [mail, setMail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = async () => {
+    try {
+      const response = await login(mail, password);
+      api.setAuthToken(response.token);
+      router.replace('/main');
+    } catch (err) {
+      console.error('Error al iniciar sesión:', err);
+      Alert.alert('Error', 'Credenciales incorrectas o error de conexión');
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -34,6 +51,8 @@ export default function Login() {
           placeholderTextColor="#777777"
           keyboardType="email-address"
           autoCapitalize="none"
+          value={mail}
+          onChangeText={setMail}
           className="mb-4 w-full rounded-xl border border-gray-500 p-3 text-white"
         />
 
@@ -42,12 +61,14 @@ export default function Login() {
           placeholder="Clave"
           placeholderTextColor="#777777"
           secureTextEntry
+          value={password}
+          onChangeText={setPassword}
           className="mb-4 w-full rounded-xl border border-gray-500 p-3 text-white"
         />
 
         {/* Botón */}
         <View className="mt-5 w-full">
-          <Button title="Entrar" onPress={() => router.replace('/main')} color="#9F6D10" />
+          <Button title="Entrar" onPress={handleLogin} color="#9F6D10" />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
