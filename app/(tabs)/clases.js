@@ -1,102 +1,161 @@
-import { View, Text, Button, Pressable  } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import React, { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ReservaConfirmadaModal from '../components/ReservaConfirmadaModal';
 
+const BASE_URL = 'http://localhost:8000/api';
 
-/* Función para obtener el nombre del día */
+/* Obtener nombre del dia */
 function getDayName(day) {
-  switch (day) {
-    case 1:
-      return 'Lunes';
-    case 2:
-      return 'Martes';
-    case 3:
-      return 'Miércoles';
-    case 4:
-      return 'Jueves';
-    case 5:
-      return 'Viernes';
-    case 6:
-      return 'Sábado';
-    case 0:
-      return 'Domingo';
-    default:
-      return '';
-  }
+  const days = [
+    'Domingo',
+    'Lunes',
+    'Martes',
+    'Miércoles',
+    'Jueves',
+    'Viernes',
+    'Sábado',
+  ];
+  return days[day];
 }
 
-/* Fetch de planificaciones */
+/* Obtener planificaciones del dia */
 async function obtenerPlanificaciones(dia) {
   try {
-    const response = await fetch('http://localhost:8000/api/planificaciones');
+    const response = await fetch(`${BASE_URL}/planificaciones`);
     const datos = await response.json();
 
-    const planificacionesFiltradas = datos.planificaciones.filter(
-      (planificacion) => planificacion.dia === dia
-    );
-
-    return planificacionesFiltradas;
-  } catch (error) {
-    console.error('Error al obtener planificaciones', error);
+    return datos.planificaciones
+      ? datos.planificaciones.filter(p => p.dia === dia)
+      : [];
+  } catch {
     return [];
   }
 }
 
+/* Obtener reservas del cliente */
+async function obtenerReservasCliente(clienteId) {
+  try {
+    const response = await fetch(`${BASE_URL}/reservas`);
+    const reservas = await response.json();
 
+    // solo las del cliente
+    return reservas
+      .filter(r => r.fk_id_cliente === clienteId)
+      .map(r => r.fk_id_planificacion);
+
+  } catch {
+    return [];
+  }
+}
 
 export default function Clases() {
   const [day, setDay] = useState('');
   const [clases, setClases] = useState([]);
+  const [user, setUser] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [reservadas, setReservadas] = useState([]);
 
+  /*  Cargar usuario */
   useEffect(() => {
-  const cargarDatos = async () => {
-    const fechaActual = new Date().getDay();
-    const diaActual = getDayName(fechaActual);
+    const loadUser = async () => {
+      const userStr = await AsyncStorage.getItem('user');
+      if (userStr) setUser(JSON.parse(userStr));
+    };
+    loadUser();
+  }, []);
 
-    setDay(diaActual);
+  /* FORZAR MARTES + cargar reservas */
+  useEffect(() => {
+    if (!user) return;
 
-    const data = await obtenerPlanificaciones(diaActual);
-    setClases(data);
+    const cargarDatos = async () => {
+      const diaForzado = getDayName(3); // MARTES
+      setDay(diaForzado);
+
+      const [clasesData, reservasData] = await Promise.all([
+        obtenerPlanificaciones(diaForzado),
+        obtenerReservasCliente(user.id),
+      ]);
+
+      setClases(clasesData);
+      setReservadas(reservasData);
+    };
+
+    cargarDatos();
+  }, [user]);
+
+  /*  Reservar clase */
+  const reservarClase = async (planificacionId) => {
+    if (!user) return;
+
+    const payload = {
+      fk_id_planificacion: planificacionId,
+      fk_id_cliente: user.id,
+      fecha_reserva: new Date().toISOString().split('T')[0],
+      estado: "1",
+    };
+
+    try {
+      const response = await fetch(`${BASE_URL}/reservas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) return;
+
+      console.log('✅ Reserva creada');
+
+      // actualizar estado local
+      setReservadas(prev => [...prev, planificacionId]);
+      setModalVisible(true);
+
+    } catch {
+      console.log('Error de conexión');
+    }
   };
 
-  cargarDatos();
-}, []);
- 
-
-  function showInfo(id){
-
-    console.log(id);
-
-  }
-
   return (
-    <View className="flex-1 items-center p-6 bg-gradient-to-b from-blue-500 to-blue-800">
-      <View className="mt-3">
-        <Text className="text-2xl font-bold text-slate-100">
-          Actividades del: {day}
-        </Text>
-      </View>
+    <View className="flex-1 p-6 bg-blue-600">
 
-      <View className="bg-red-200 w-full flex-1 px-4 mt-9">
-        {/* Map de las clases */}
-        {clases.map((clase, index) => (
-          <View key={index} className="mb-3 p-3 bg-white rounded-xl">
-            <Text>{clase.clase.nombre}</Text>
-            <View className=" flex w-full bg-green-400">
-              <Text>{clase.hora_inicio}</Text>
-              <Text>{clase.hora_fin}</Text>
-              <Text>{clase.instructor.nombre +" "+clase.instructor.apellido1+" "+clase.instructor.apellido2}</Text>
-            </View>
+      <Text className="text-2xl font-bold text-white mb-4">
+        Actividades del {day}
+      </Text>
+
+      {clases.map((clase) => {
+        const yaReservada = reservadas.includes(clase.id);
+
+        return (
+          <View key={clase.id} className="mb-4 bg-white p-4 rounded-xl">
+            <Text className="font-bold">{clase.clase.nombre}</Text>
+            <Text>{clase.hora_inicio} - {clase.hora_fin}</Text>
+            <Text>
+              {clase.instructor.nombre} {clase.instructor.apellido1}
+            </Text>
+
             <Pressable
-              onPress={() => showInfo(clase.clase.id)}
-              className="p-3 bg-blue-500 rounded-xl"
+              disabled={yaReservada}
+              onPress={() => reservarClase(clase.id)}
+              className={`
+                mt-3 p-3 rounded-lg
+                ${yaReservada ? 'bg-gray-400' : 'bg-blue-500'}
+              `}
             >
-              <Text className="text-white font-bold text-center">
-                Reservar clase
+              <Text className="text-white text-center font-bold">
+                {yaReservada ? 'Clase reservada' : 'Reservar clase'}
               </Text>
             </Pressable>
           </View>
-        ))}
-      </View>
+        );
+      })}
+
+      
+      <ReservaConfirmadaModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
+
     </View>
   );
 }
