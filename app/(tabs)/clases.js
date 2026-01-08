@@ -36,9 +36,10 @@ async function obtenerPlanificaciones(dia) {
 /* Obtener reservas del cliente */
 async function obtenerReservasCliente(clienteId) {
   try {
-    const response = await fetch(`${BASE_URL}/reservas`);
+    const response = await fetch(`${BASE_URL}/reservas/cliente/${clienteId}`);
     const reservas = await response.json();
 
+    console.log(reservas)
     // solo las del cliente
     return reservas
       .filter(r => r.fk_id_cliente === clienteId)
@@ -105,12 +106,7 @@ export default function Clases() {
 
       if (!response.ok) return;
 
-      console.log('✅ Reserva creada');
-
-      // actualizar estado local
-      setReservadas(prev => [...prev, planificacionId]);
-      setModalVisible(true);
-
+      console.log('Reserva creada');
     } catch {
       console.log('Error de conexión');
     }
