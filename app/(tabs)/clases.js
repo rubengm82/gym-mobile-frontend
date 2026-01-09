@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, SafeAreaView,ScrollView } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ReservaConfirmadaModal from '../components/ReservaConfirmadaModal';
@@ -113,12 +113,16 @@ export default function Clases() {
   };
 
   return (
-    <View className="flex-1 p-6 bg-blue-600">
+    <View className="flex-1 bg-blue-600 p-6">
+  <Text className="text-2xl font-bold text-white mb-4">
+    Actividades del {day}
+  </Text>
 
-      <Text className="text-2xl font-bold text-white mb-4">
-        Actividades del {day}
-      </Text>
-
+  <SafeAreaView className="flex-1">
+    <ScrollView
+      contentContainerStyle={{ paddingBottom: 40 }}
+      showsVerticalScrollIndicator={false}
+    >
       {clases.map((clase) => {
         const yaReservada = reservadas.includes(clase.id);
 
@@ -133,10 +137,9 @@ export default function Clases() {
             <Pressable
               disabled={yaReservada}
               onPress={() => reservarClase(clase.id)}
-              className={`
-                mt-3 p-3 rounded-lg
-                ${yaReservada ? 'bg-gray-400' : 'bg-blue-500'}
-              `}
+              className={`mt-3 p-3 rounded-lg ${
+                yaReservada ? 'bg-gray-400' : 'bg-blue-500'
+              }`}
             >
               <Text className="text-white text-center font-bold">
                 {yaReservada ? 'Clase reservada' : 'Reservar clase'}
@@ -145,13 +148,12 @@ export default function Clases() {
           </View>
         );
       })}
+    </ScrollView>
+  </SafeAreaView>
+</View>
 
-      
-      <ReservaConfirmadaModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-      />
-
-    </View>
   );
+
+  
+  
 }
