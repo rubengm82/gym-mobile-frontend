@@ -32,3 +32,13 @@ export const logout = async () => {
     throw err;
   }
 };
+
+export const confirmarReserva = async (reserva_id) => {
+  try {
+    const res = await api.put(`/reservas/${reserva_id}/confirmada`);
+    return res.data;
+  } catch (err) {
+    console.error('Error al confirmar la reserva:', err);
+    throw err;
+  }
+};

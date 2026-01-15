@@ -1,8 +1,7 @@
-// components/ModalInfo.js
 import { View, Text, Modal, Pressable } from 'react-native';
-import React from 'react';
 
-export default function ModalInfo({ visible, onClose, children }) {
+
+export default function ModalInfo({ visible, onClose, children}) {
   return (
     <Modal
       visible={visible}
