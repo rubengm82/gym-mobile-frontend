@@ -41,12 +41,39 @@ export default function QR() {
 
   //Funcion para devolver el estado a 2 en la BBDD
 
+const confirmarReserva = async (id_reserva) => {
+  try {
+    const response = await fetch(
+      `http://localhost:8000/api/reservas/${id_reserva}/confirmada`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error al confirmar la reserva: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+
+  } catch (error) {
+    console.error('Error en confirmarReserva:', error);
+    throw error;
+  }
+};
+
+
 
   //Funcion para mostrar el Qr de la reserva
 
   const obtenerQR = async (id_reserva) => {
   try {
-    // Llamada a la API
+ 
     const response = await fetch(`http://localhost:8000/api/reservas/${id_reserva}`);
     
     if (!response.ok) {
@@ -55,20 +82,26 @@ export default function QR() {
 
     const data = await response.json();
 
-    // Convertimos a string antes de guardar en el estado
+
     const qrIdString = String(data.id);
     setQrReservaId(qrIdString);
 
-    // console.log muestra el valor real
+ 
     console.log('QR VALUE from API:', data.id);
     console.log('QR VALUE in state (string):', qrIdString);
-
-    // Mostramos el modal solo después de tener el valor
     setModalVisible(true);
+    try {
+      const confirmacion = await confirmarReserva(id_reserva);
+      console.log('Reserva confirmada:', confirmacion);
+      cargarDatos();
+      
+    } catch (error) {
+      console.log('No se pudo confirmar la reserva');
+    }
 
   } catch (error) {
     console.error('Error al obtener QR:', error);
-    // Puedes mostrar alerta o mensaje al usuario aquí
+
   }
 };
 
@@ -77,6 +110,9 @@ export default function QR() {
      const reservasData = await obtenerReservasCliente(user.id);
      setReservas(reservasData);
   };
+
+  
+
 
   useEffect(() => {
     const loadUser = async () => {
@@ -97,12 +133,11 @@ export default function QR() {
  
 
   return (
-    <View className="flex-1 bg-gray-800">
-      <ScrollView className="flex-1 p-4">
-        <Text className="text-white text-xl mb-4">
-          Reservas del cliente
-        </Text>
-
+     <View className="flex-1 bg-gradient-to-b from-gray-900 to-gray-700 px-6">
+          <Text className="text-2xl font-bold text-white mb-4 mt-6">
+            Tus clases
+          </Text>
+        <ScrollView className="flex-1">
         {reservas.map((reserva) => (
           <View
             key={reserva.id}
@@ -153,11 +188,11 @@ export default function QR() {
 >
   {qrReservaId !== '' && (
     <>
-      <Text className="text-white text-xl mb-4">
-        QR de la reserva #{qrReservaId}
-      </Text>
 
       <View className="bg-white w-64 h-64 justify-center items-center rounded-lg">
+        <Text className="font-bold text-blue-950 text-xl mb-4">
+        QR de la reserva #{qrReservaId}
+      </Text>
         <QRCode 
           value={qrReservaId}
           size={300}

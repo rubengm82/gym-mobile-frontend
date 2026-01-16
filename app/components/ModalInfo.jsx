@@ -20,7 +20,7 @@ export default function ModalInfo({ visible, onClose, children}) {
           </Pressable>
 
          
-          <View className="mt-4">
+          <View className="mt-4 justify-center flex items-center">
             {children}
           </View>
 
