@@ -5,6 +5,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import ModalInfo from '../components/ModalInfo';
 import QRCode from 'react-native-qrcode-svg';
 
+import { MaterialIcons } from '@expo/vector-icons';
+
 export default function QR() {
   const [user, setUser] = useState(null);
   const [reservas, setReservas] = useState([]);
@@ -107,52 +109,67 @@ export default function QR() {
     );
 
   return (
-    <View className="flex-1 bg-gradient-to-b from-gray-900 to-gray-700 px-6">
-      <Text className="text-2xl font-bold text-white mb-4 mt-6">
-        Tus clases
-      </Text>
+    <View className="flex-1 bg-gradient-to-b from-gray-900 to-gray-700">
+      <View className = " w-full h-44 p-5 flex flex-col justify-center bg-gradient-to-b from-blue-600 ">
+        <Text className="font-bold text-2xl text-amber-400">
+          Reservas disponibles
+        </Text>
+        <Text className =" font-light text-slate-200 text-md">
+          Aqui puedes encontrar tus inscripciones a las clases, obten el QR para entrar en ellas
+        </Text>
+      </View>
 
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1 px-6">
         {reservas.length !== 0 ? (
           reservas.map((reserva) => (
-            <View key={reserva.id} className="bg-gray-700 p-4 mb-3 rounded-lg">
-              <View className="flex flex-row justify-between">
-                <Text className="text-white">
-                  Clase: {reserva.planificacion?.clase?.nombre ?? 'No disponible'}
-                </Text>
-                <Text className="text-white">
-                  Instructor: {reserva.planificacion?.instructor?.nombre ?? 'No disponible'}
-                </Text>
-              </View>
+            <View
+            key={reserva.id}
+            className="bg-gray-800 p-4 mb-4 rounded-2xl shadow-md"
+          >
 
-              <Text className="text-white">
-                Hora: {reserva.planificacion?.hora_inicio} - {reserva.planificacion?.hora_fin}
+            <View className="flex flex-row justify-between mb-2">
+              <Text className="text-white font-semibold text-base">
+                {reserva.planificacion?.clase?.nombre ?? 'Clase no disponible'}
               </Text>
-
-              <View className="flex flex-row w-full justify-around">
-                <Pressable
-                  onPress={() => obtenerQR(reserva.id)}
-                  className="mt-3 p-3 rounded-lg w-3/5 bg-blue-500"
-                >
-                  <Text className="text-white text-center font-bold">
-                    Obtener QR
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  onPress={() => abrirModal(reserva.id)}
-                  className="mt-3 p-3 rounded-lg w-1/4 bg-red-500"
-                >
-                  <Text className="text-white text-center font-bold">
-                    Cancelar
-                  </Text>
-                </Pressable>
-              </View>
+              <Text className="text-gray-300 text-sm">
+                {reserva.planificacion?.instructor?.nombre ?? 'Sin instructor'}
+              </Text>
             </View>
+              <Text>
+                {reserva.planificacion}
+              </Text>
+          
+            <Text className="text-gray-300 mb-4">
+              {reserva.planificacion?.hora_inicio} – {reserva.planificacion?.hora_fin}
+            </Text>
+
+            <View className="flex flex-row gap-3">
+
+              <Pressable
+                onPress={() => obtenerQR(reserva.id)}
+                className="flex-1 flex-row items-center justify-center gap-2 bg-indigo-700 p-3 rounded-xl active:opacity-80"
+              >
+                <MaterialIcons name="qr-code" color="white" size={22} />
+                <Text className="text-white font-bold">
+                  Obtener QR
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => abrirModal(reserva.id)}
+                className="bg-red-600 px-4 rounded-xl justify-center active:opacity-80"
+              >
+                <Text className="text-white font-bold">
+                  Cancelar
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+
           ))
         ) : (
-          <Text className="text-white text-center mt-4">
-            No tienes reservas
+          <Text className="text-white text-center mt-4 text-xl font-bold">
+            No tienes reservas actualmente
           </Text>
         )}
       </ScrollView>
