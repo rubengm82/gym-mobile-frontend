@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,6 +13,8 @@ export default function QR() {
   const cargando = useRef(false);
   const [modalCancelar, setModalCancelar]= useState(false);
   const [id_cancelar, setIdCancelar] = useState('');
+  const [scannedId, setScannedId] = useState('');
+  const debounceRef = useRef(null);
 
   async function cancelarReserva(reservaID) {
     try {
@@ -63,7 +65,6 @@ export default function QR() {
       setQrReservaId(String(data.id));
       setModalVisible(true);
 
-      await confirmarReserva(id_reserva);
       cargarDatos();
     } catch {}
   };
@@ -161,15 +162,45 @@ export default function QR() {
         onClose={() => {
           setModalVisible(false);
           setQrReservaId('');
+          setScannedId('');
         }}
       >
         {qrReservaId !== '' && (
-          <View className="bg-white w-64 h-64 justify-center items-center rounded-lg">
-            <Text className="font-bold text-blue-950 text-xl mb-4">
-              Pasa
-            </Text>
-            <QRCode value={qrReservaId} size={300} />
-          </View>
+          <>
+            <View className="bg-white w-64 h-64 justify-center items-center rounded-lg">
+              <Text className="font-bold text-blue-950 text-xl mb-4">
+                QR de la reserva #{qrReservaId}
+              </Text>
+              <QRCode
+                value={qrReservaId}
+                size={300}
+              />
+            </View>
+            <TextInput
+              value={scannedId}
+              onChangeText={(text) => {
+                setScannedId(text);
+                if (debounceRef.current) {
+                  clearTimeout(debounceRef.current);
+                }
+                debounceRef.current = setTimeout(() => {
+                  const id = parseInt(text);
+                  if (!isNaN(id) && text.length > 0) {
+                    confirmarReserva(id).then(() => {
+                      setScannedId('');
+                      setModalVisible(false);
+                    }).catch(error => {
+                      alert('Error al confirmar: ' + error.message);
+                      setScannedId('');
+                    });
+                  }
+                }, 500);  // Esperar 500ms sin cambios
+              }}
+              style={{ position: 'absolute', left: -1000, top: -1000, width: 1, height: 1, opacity: 0 }}
+              keyboardType="numeric"
+              autoFocus
+            />
+          </>
         )}
       </ModalInfo>
 
