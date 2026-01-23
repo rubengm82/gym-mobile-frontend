@@ -20,6 +20,7 @@ export default function QR() {
         `http://localhost:8000/api/reservas/${reservaID}/cancelar`,
         { method: 'POST' }
       );
+      setModalCancelar(false);
       cargarDatos();
     } catch {}
   }

@@ -28,7 +28,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="qr"
         options={{
-          title: 'QR',
+          title: 'Reservas',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="qr-code" color={color} size={size} />
           ),
