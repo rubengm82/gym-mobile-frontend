@@ -10,7 +10,7 @@ export default function ModalInfo({ visible, onClose, children}) {
       statusBarTranslucent
     >
 
-      <View className="flex-1 bg-black/60 justify-center items-center px-5">
+      <View className="flex-1 bg-black/60 justify-center items-center">
         <View className="w-full max-w-md bg-white rounded-2xl p-6 shadow-2xl relative">
 
           <Pressable

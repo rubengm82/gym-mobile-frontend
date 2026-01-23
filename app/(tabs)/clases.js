@@ -1,6 +1,7 @@
 import { View, Text, Pressable, ScrollView } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 const BASE_URL = 'http://localhost:8000/api';
 
@@ -17,7 +18,6 @@ function getDayName(day) {
   return days[day];
 }
 
-// obtener planificaciones del dia
 async function obtenerPlanificaciones(dia) {
   try {
     const response = await fetch(`${BASE_URL}/planificaciones`);
@@ -30,14 +30,11 @@ async function obtenerPlanificaciones(dia) {
   }
 }
 
-// obtener reservas del cliente
 async function obtenerReservasCliente(clienteId) {
   try {
     const response = await fetch(`${BASE_URL}/reservas/cliente/${clienteId}`);
     const reservas = await response.json();
-    return reservas
-      .filter(r => r.fk_id_cliente === clienteId)
-      .map(r => r.fk_id_planificacion);
+    return reservas.map(r => r.fk_id_planificacion);
   } catch {
     return [];
   }
@@ -48,10 +45,11 @@ export default function Clases() {
   const [clases, setClases] = useState([]);
   const [user, setUser] = useState(null);
   const [reservadas, setReservadas] = useState([]);
+  const cargando = useRef(false);
 
-  // cargar clases y reservas
   const cargarDatos = async () => {
-    if (!user) return;
+    if (!user || cargando.current) return;
+    cargando.current = true;
     const diaForzado = getDayName(3);
     setDay(diaForzado);
     const [clasesData, reservasData] = await Promise.all([
@@ -60,28 +58,29 @@ export default function Clases() {
     ]);
     setClases(clasesData);
     setReservadas(reservasData);
+    cargando.current = false;
   };
 
-  // cargar usuario
   useEffect(() => {
     const loadUser = async () => {
       try {
         const userStr = await AsyncStorage.getItem('user');
         if (userStr) setUser(JSON.parse(userStr));
-      } catch (error) {
-        console.error('error loading user:', error);
-      }
+      } catch {}
     };
     loadUser();
   }, []);
 
-  // cargar datos al iniciar
-  useEffect(() => {
-    if (!user) return;
-    cargarDatos();
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!user) return;
+      cargarDatos();
+      return () => {
+        cargando.current = false;
+      };
+    }, [user])
+  );
 
-  // reservar clase
   const reservarClase = async (planificacionId) => {
     if (!user) return;
     const payload = {
@@ -98,9 +97,7 @@ export default function Clases() {
       });
       if (!response.ok) return;
       await cargarDatos();
-    } catch {
-      console.log('error de conexión');
-    }
+    } catch {}
   };
 
   return (
@@ -117,8 +114,12 @@ export default function Clases() {
           return (
             <View key={clase.id} className="mb-4 bg-white p-4 rounded-xl shadow-md">
               <Text className="font-bold text-lg">{clase.clase.nombre}</Text>
-              <Text className="text-gray-600">{clase.hora_inicio} - {clase.hora_fin}</Text>
-              <Text className="text-gray-600">{clase.instructor.nombre} {clase.instructor.apellido1}</Text>
+              <Text className="text-gray-600">
+                {clase.hora_inicio} - {clase.hora_fin}
+              </Text>
+              <Text className="text-gray-600">
+                {clase.instructor.nombre} {clase.instructor.apellido1}
+              </Text>
               <Pressable
                 disabled={yaReservada}
                 onPress={() => reservarClase(clase.id)}
