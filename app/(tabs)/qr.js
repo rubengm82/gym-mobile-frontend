@@ -132,11 +132,11 @@ export default function QR() {
                 {reserva.planificacion?.clase?.nombre ?? 'Clase no disponible'}
               </Text>
               <Text className="text-gray-300 text-sm">
-                {reserva.planificacion?.instructor?.nombre ?? 'Sin instructor'}
+                {reserva.planificacion?.instructor?.nombre} {reserva.planificacion?.instructor?.apellido1} {reserva.planificacion?.instructor?.apellido2 ?? 'Sin instructor'}
               </Text>
             </View>
               <Text>
-                {reserva.planificacion}
+                
               </Text>
           
             <Text className="text-gray-300 mb-4">
@@ -147,7 +147,7 @@ export default function QR() {
 
               <Pressable
                 onPress={() => obtenerQR(reserva.id)}
-                className="flex-1 flex-row items-center justify-center gap-2 bg-indigo-700 p-3 rounded-xl active:opacity-80"
+                className="flex-1 flex-row items-center justify-center gap-2 bg-blue-600 p-3 rounded-xl active:opacity-80"
               >
                 <MaterialIcons name="qr-code" color="white" size={22} />
                 <Text className="text-white font-bold">

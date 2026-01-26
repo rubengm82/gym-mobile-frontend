@@ -55,10 +55,8 @@ export default function Clases() {
     if (!user || cargando.current) return;
     cargando.current = true;
 
-    const diaAhora = new Date();
-    console.log(diaAhora)
-
-    const dia = getDayName(diaAhora.getDay());
+    const hoy = new Date();
+    const dia = getDayName(hoy.getDay());
     setDay(dia);
 
     const [clasesData, reservasData] = await Promise.all([
@@ -106,7 +104,7 @@ export default function Clases() {
       if (response.ok) {
         setModalConfirmar(false);
         setIdClaseSeleccionada(null);
-        await cargarDatos();
+        cargarDatos();
       }
     } catch (error) {
       console.error(error);
@@ -119,43 +117,65 @@ export default function Clases() {
   };
 
   return (
-    <View className="flex-1 bg-gradient-to-b from-gray-900 to-gray-700 px-6">
-      <Text className="text-2xl font-bold text-white mb-4 mt-6">
-        Actividades del {day}
-      </Text>
+    <View className="flex-1 bg-gradient-to-b from-gray-900 to-gray-700">
+      
+      
+      <View className="w-full h-44 p-5 justify-center bg-gradient-to-b from-blue-600">
+        <Text className="font-bold text-2xl text-amber-400">
+          Actividades del {day}
+        </Text>
+        <Text className="font-light text-slate-200 text-md">
+          Reserva tus clases disponibles para hoy
+        </Text>
+      </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        {clases.map((clase) => {
-          const yaReservada = reservadas.includes(clase.id);
+      <ScrollView className="flex-1 px-6">
+        {clases.length !== 0 ? (
+          clases.map((clase) => {
+            const yaReservada = reservadas.includes(clase.id);
 
-          return (
-            <View key={clase.id} className="mb-4 bg-white p-4 rounded-xl shadow-md">
-              <Text className="font-bold text-lg">{clase.clase.nombre}</Text>
-              <Text className="text-gray-600">
-                {clase.hora_inicio} - {clase.hora_fin}
-              </Text>
-              <Text className="text-gray-600">
-                {clase.instructor.nombre} {clase.instructor.apellido1}
-              </Text>
-
-              <Pressable
-                disabled={yaReservada}
-                onPress={() => abrirModalConfirmacion(clase.id)}
-                className={`mt-3 p-3 rounded-lg ${
-                  yaReservada ? 'bg-gray-400' : 'bg-blue-500'
-                }`}
+            return (
+              <View
+                key={clase.id}
+                className="bg-gray-800 p-4 mb-4 rounded-2xl shadow-md"
               >
-                <Text className="text-white text-center font-bold">
-                  {yaReservada ? 'Clase reservada' : 'Reservar clase'}
+                <View className="flex flex-row justify-between mb-2">
+                  <Text className="text-white font-semibold text-base">
+                    {clase.clase.nombre}
+                  </Text>
+                  <Text className="text-gray-300 text-sm">
+                    {clase.instructor.nombre} {clase.instructor.apellido1}
+                  </Text>
+                </View>
+
+                <Text className="text-gray-300 mb-4">
+                  {clase.hora_inicio} – {clase.hora_fin}
                 </Text>
-              </Pressable>
-            </View>
-          );
-        })}
+
+                <Pressable
+                  disabled={yaReservada}
+                  onPress={() => abrirModalConfirmacion(clase.id)}
+                  className={`p-3 rounded-xl ${
+                    yaReservada ? 'bg-gray-600' : 'bg-blue-600'
+                  }`}
+                >
+                  <Text className="text-white text-center font-bold">
+                    {yaReservada ? 'Clase reservada' : 'Reservar clase'}
+                  </Text>
+                </Pressable>
+              </View>
+            );
+          })
+        ) : (
+          <Text className="text-white text-center mt-6 text-xl font-bold">
+            No hay clases disponibles hoy
+          </Text>
+        )}
       </ScrollView>
 
+      
       <Modal transparent visible={modalConfirmar} animationType="fade">
-        <View className="flex-1 bg-black/50 justify-center items-center px-6">
+        <View className="flex-1 bg-black/60 justify-center items-center px-6">
           <View className="bg-white w-full rounded-xl p-6">
             <Text className="text-xl font-bold text-center mb-4">
               ¿Confirmar reserva?
@@ -163,7 +183,7 @@ export default function Clases() {
 
             <Pressable
               onPress={reservarClase}
-              className="bg-blue-500 p-3 rounded-lg mb-2"
+              className="bg-blue-600 p-3 rounded-lg mb-2"
             >
               <Text className="text-white text-center font-bold">
                 Confirmar
