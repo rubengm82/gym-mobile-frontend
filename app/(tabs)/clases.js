@@ -142,9 +142,10 @@ export default function Clases() {
                 <View className="flex flex-row justify-between mb-2">
                   <Text className="text-white font-semibold text-base">
                     {clase.clase.nombre}
+                    {clase}
                   </Text>
                   <Text className="text-gray-300 text-sm">
-                    {clase.instructor.nombre} {clase.instructor.apellido1}
+                    {clase.instructor.nombre} {clase.instructor.apellido1} {clase.instructor.apellido2}
                   </Text>
                 </View>
 
