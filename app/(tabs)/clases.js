@@ -40,11 +40,23 @@ async function obtenerReservasCliente(clienteId) {
   }
 }
 
+async function obtenerTodasReservas() {
+  try {
+    const response = await fetch(`${BASE_URL}/reservas`);
+    const reservas = await response.json();
+    return Array.isArray(reservas) ? reservas : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function Clases() {
   const [day, setDay] = useState('');
   const [clases, setClases] = useState([]);
   const [user, setUser] = useState(null);
   const [reservadas, setReservadas] = useState([]);
+  const [aforos, setAforos] = useState({});
+  const [errorReserva, setErrorReserva] = useState('');
 
   const [modalConfirmar, setModalConfirmar] = useState(false);
   const [idClaseSeleccionada, setIdClaseSeleccionada] = useState(null);
@@ -52,37 +64,88 @@ export default function Clases() {
   const cargando = useRef(false);
 
   const cargarDatos = async () => {
-    if (!user || cargando.current) return;
+    const userStr = await AsyncStorage.getItem('user');
+    if (!userStr) return;
+    
+    const userData = JSON.parse(userStr);
+    if (!userData?.id) return;
+    
+    if (cargando.current) return;
     cargando.current = true;
 
     const hoy = new Date();
     const dia = getDayName(hoy.getDay());
     setDay(dia);
 
-    const [clasesData, reservasData] = await Promise.all([
-      obtenerPlanificaciones(dia),
-      obtenerReservasCliente(user.id),
-    ]);
+    try {
+      const clasesData = await obtenerPlanificaciones(dia);
+      const reservasData = await obtenerReservasCliente(userData.id);
+      const todasReservas = await obtenerTodasReservas();
 
-    setClases(clasesData);
-    setReservadas(reservasData);
-    cargando.current = false;
+      // Calcular aforos desde las clases
+      const aforosData = {};
+      for (const clase of clasesData) {
+        const maximo = clase.clase?.aforo || 0;
+        // Contar reservas para esta planificación (solo estado = 1)
+        const actual = todasReservas.filter(
+          r => r.fk_id_planificacion === clase.id && r.estado == 1
+        ).length;
+        aforosData[clase.id] = { actual, maximo };
+      }
+      setAforos(aforosData);
+
+      // Verificar que el usuario actual es el mismo
+      const currentUserStr = await AsyncStorage.getItem('user');
+      if (currentUserStr) {
+        const currentUser = JSON.parse(currentUserStr);
+        if (currentUser?.id === userData.id) {
+          setClases(clasesData);
+          setReservadas(reservasData);
+        }
+      }
+    } finally {
+      cargando.current = false;
+    }
   };
 
   useEffect(() => {
     const loadUser = async () => {
       const userStr = await AsyncStorage.getItem('user');
-      if (userStr) setUser(JSON.parse(userStr));
+      if (userStr) {
+        setUser(JSON.parse(userStr));
+      }
     };
     loadUser();
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      if (user) cargarDatos();
-      return () => (cargando.current = false);
-    }, [user])
+      cargarDatos();
+      return () => {};
+    }, [])
   );
+
+  useEffect(() => {
+    if (user?.id) {
+      setReservadas([]);
+      setClases([]);
+      setAforos({});
+      setErrorReserva('');
+      cargando.current = false;
+      cargarDatos();
+    }
+  }, [user?.id]);
+
+  const verificarAforo = (planificacionId) => {
+    const info = aforos[planificacionId];
+    if (!info) return true;
+    
+    if (info.actual >= info.maximo && info.maximo > 0) {
+      setErrorReserva('Esta clase ha alcanzado el aforo máximo');
+      return false;
+    }
+    return true;
+  };
 
   const reservarClase = async () => {
     if (!user || !idClaseSeleccionada) return;
@@ -104,7 +167,11 @@ export default function Clases() {
       if (response.ok) {
         setModalConfirmar(false);
         setIdClaseSeleccionada(null);
+        setErrorReserva('');
         cargarDatos();
+      } else if (response.status === 400) {
+        const errorData = await response.json();
+        setErrorReserva(errorData.message || 'Error al realizar la reserva');
       }
     } catch (error) {
       console.error(error);
@@ -112,8 +179,11 @@ export default function Clases() {
   };
 
   const abrirModalConfirmacion = (idClase) => {
-    setIdClaseSeleccionada(idClase);
-    setModalConfirmar(true);
+    setErrorReserva('');
+    if (verificarAforo(idClase)) {
+      setIdClaseSeleccionada(idClase);
+      setModalConfirmar(true);
+    }
   };
 
   return (
@@ -129,10 +199,20 @@ export default function Clases() {
         </Text>
       </View>
 
-      <ScrollView className="flex-1 px-6">
+      {errorReserva ? (
+        <Text className="text-red-500 text-center px-4 py-2 bg-red-100 mx-4 mt-2 rounded">
+          {errorReserva}
+        </Text>
+      ) : null}
+
+      <ScrollView className="flex-1 px-6 mt-2">
         {clases.length !== 0 ? (
           clases.map((clase) => {
             const yaReservada = reservadas.includes(clase.id);
+            const infoAforo = aforos[clase.id];
+            const maximo = infoAforo?.maximo || 0;
+            const lleno = infoAforo ? infoAforo.actual >= infoAforo.maximo : false;
+            const deshabilitado = yaReservada || (lleno && maximo > 0);
 
             return (
               <View
@@ -152,15 +232,22 @@ export default function Clases() {
                   {clase.hora_inicio} – {clase.hora_fin}
                 </Text>
 
+                {maximo > 0 && (
+                  <Text className={`text-sm mb-2 ${lleno ? 'text-red-400' : 'text-green-400'}`}>
+                    Aforo: {infoAforo.actual}/{maximo}
+                    {lleno ? ' (COMPLETO)' : ''}
+                  </Text>
+                )}
+
                 <Pressable
-                  disabled={yaReservada}
+                  disabled={deshabilitado}
                   onPress={() => abrirModalConfirmacion(clase.id)}
                   className={`p-3 rounded-xl ${
-                    yaReservada ? 'bg-gray-600' : 'bg-blue-600'
+                    deshabilitado ? 'bg-gray-600' : 'bg-blue-600'
                   }`}
                 >
                   <Text className="text-white text-center font-bold">
-                    {yaReservada ? 'Clase reservada' : 'Reservar clase'}
+                    {yaReservada ? 'Clase reservada' : (lleno && maximo > 0 ? 'Aforo completo' : 'Reservar clase')}
                   </Text>
                 </Pressable>
               </View>
